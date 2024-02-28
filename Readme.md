@@ -549,6 +549,9 @@ if (isset($responseData['access_token'])) {
 
 #### CREATED A DEMO APPLICATION 
 The application is under demo application
-
+https://github.com/ELIJAHKUNGU/interview/tree/master/demoApplication
 #### DESCRIPTION
 The PHP application seamlessly connects to an MS SQL Server database, efficiently retrieving data from multiple tables such as employees, loans, salary_advances, and deductions through complex SQL queries employing JOIN operations and aggregate functions like SUM. The application meticulously calculates total salaries for each employee by skillfully combining data from disparate tables and performs the essential task of returning results as JSON, ensuring easy consumption by client-side applications. Demonstrating adept error handling, the application gracefully manages potential errors through try-catch blocks, promptly returning appropriate error messages and HTTP status codes when necessary, bolstering its reliability. Moreover, the application demonstrates a commitment to security by securely storing database credentials in a separate configuration file (config.php) and employing parameterized SQL queries, effectively mitigating risks of unauthorized access and SQL injection attacks. This comprehensive approach fulfills the requirements by seamlessly connecting, retrieving, processing, and securely handling data from an MS SQL Server database, ensuring robustness, efficiency, and security throughout its execution.
+
+Access index.php?action=create_sample_data in your browser to create sample data.
+Access index.php?action=calculate_total_salary to calculate the total salary of each employee and display the results in a table.
