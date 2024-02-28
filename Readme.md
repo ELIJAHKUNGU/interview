@@ -355,9 +355,200 @@ getUserData();
 Advanced questions:
 
 ### 12. Write a PHP script that performs asynchronous processing using a message queue system like RabbitMQ or Redis. The script should receive a task (e.g., an email sending request) and process it in the background without blocking the main application. Demonstrate how you would set up the message queue and create a worker script to handle the tasks.
+i will use redis for this 
+<ol>
+<li> Install Redis server and PHP Redis extension.</li>
+<li> Create a producer script to push tasks to a Redis list.</li>
+<li> Create a worker script to pop tasks from the Redis list and process them in the background.</li>
+</ol>
+ ##### step 1
+ 
+ ```
+ // Install Redis server and PHP Redis extension in ubuntu server
+  sudo apt-get install redis-server
+  sudo apt-get install php-redis
+```
+
+##### step 2 
+```
+<?php
+//Create a producer script to push tasks to a Redis list.
+
+// Connect to Redis server
+$redis = new Redis();
+$redis->connect('127.0.0.1', 6379);
+
+// Push a task to the queue (Redis list)
+$task = json_encode(['type' => 'email', 'to' => 'recipient@example.com', 'message' => 'Hello from Redis!']);
+$redis->lPush('task_queue', $task);
+
+echo "Sent 'Hello from Redis!' to task queue.\n";
+
+// Close Redis connection
+$redis->close();
+
+```
+
+##### step 3 
+```
+<?php
+
+// Connect to Redis server
+$redis = new Redis();
+$redis->connect('127.0.0.1', 6379);
+
+echo "Waiting for tasks. To exit press CTRL+C\n";
+
+// Process tasks indefinitely
+while (true) {
+    // Pop a task from the queue (Redis list)
+    $task = $redis->rPop('task_queue');
+    
+    if ($task !== false) {
+        echo "Received task: $task\n";
+        // Simulate task processing
+        sleep(5);
+        echo "Processed task: $task\n";
+    }
+    
+    // Add additional delay to avoid excessive looping
+    usleep(100000); // 100 milliseconds
+}
+
+// Close Redis connection (never reached in this script)
+$redis->close();
+```
+
 
 ### 13. Write a PHP script that serializes a large data structure (e.g., an array or object), compresses it, saves it to a file, and then unserializes and decompresses the data from the file. You can use standard PHP functions for serialization and a compression library like zlib to achieve this.
+```
+<?php
+
+// Large data structure (array in this example)
+$largeData = [
+    'key1' => 'value1',
+    'key2' => 'value2',
+    // Add more data here if needed
+];
+
+// Serialize the data
+$serializedData = serialize($largeData);
+
+// Compress the serialized data
+$compressedData = gzcompress($serializedData);
+
+// File path to save compressed data
+$filePath = 'compressed_data.txt';
+
+// Save the compressed data to a file
+file_put_contents($filePath, $compressedData);
+
+echo "Serialized and compressed data saved to $filePath\n";
+
+// Retrieve compressed data from the file
+$compressedDataFromFile = file_get_contents($filePath);
+
+// Decompress the data
+$decompressedData = gzuncompress($compressedDataFromFile);
+
+// Unserialize the decompressed data
+$unserializedData = unserialize($decompressedData);
+
+// Display the unserialized data
+echo "Unserialized data:\n";
+print_r($unserializedData);
+```
 
 ### 14. Write a PHP script that integrates with a REST API protected by OAuth 2.0 authentication. Implement the OAuth 2.0 authorization code flow to obtain an access token and use that token to make authenticated requests to the API. Provide a code example that demonstrates the complete authentication and data retrieval process.
 
+#### config.php
+```
+// OAuth 2.0 configuration
+$clientId = 'your_client_id';
+$clientSecret = 'your_client_secret';
+$redirectUri = 'http://your-redirect-uri';
+$authorizationEndpoint = 'authorization_endpoint';
+$tokenEndpoint = 'token_endpoint';
+$apiEndpoint = 'api_endpoint';
+```
+
+#### index.php
+```
+<?php
+
+// Include the OAuth 2.0 configuration
+require_once 'config.php';
+
+// Step 1: Redirect the user to the authorization endpoint
+if (!isset($_GET['code'])) {
+    $authorizeUrl = $authorizationEndpoint . '?' . http_build_query([
+        'client_id' => $clientId,
+        'redirect_uri' => $redirectUri,
+        'response_type' => 'code',
+        'scope' => 'scope_of_access',
+    ]);
+    
+    header('Location: ' . $authorizeUrl);
+    exit;
+}
+
+// Step 2: Exchange authorization code for access token
+$code = $_GET['code'];
+
+$tokenParams = [
+    'grant_type' => 'authorization_code',
+    'client_id' => $clientId,
+    'client_secret' => $clientSecret,
+    'redirect_uri' => $redirectUri,
+    'code' => $code,
+];
+
+$ch = curl_init();
+curl_setopt($ch, CURLOPT_URL, $tokenEndpoint);
+curl_setopt($ch, CURLOPT_POST, true);
+curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($tokenParams));
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+$response = curl_exec($ch);
+curl_close($ch);
+
+$responseData = json_decode($response, true);
+
+if (isset($responseData['access_token'])) {
+    $accessToken = $responseData['access_token'];
+
+    // Step 3: Use access token to make authenticated requests to the API endpoint
+    $apiUrl = $apiEndpoint;
+    $headers = [
+        'Authorization: Bearer ' . $accessToken,
+        'Accept: application/json',
+    ];
+
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $apiUrl);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    $apiResponse = curl_exec($ch);
+    curl_close($ch);
+
+    // Step 4: Process the API response
+    $responseData = json_decode($apiResponse, true);
+
+    if ($responseData) {
+        // Handle API response
+        print_r($responseData);
+    } else {
+        echo 'Failed to retrieve data from API.';
+    }
+} else {
+    echo 'Failed to obtain access token.';
+}
+```
+
+
 ### 15. Develop a PHP application that connects to an MS SQL Server database, retrieves data from multiple tables, performs a complex SQL query to join and aggregate data, and then returns the results as JSON. Demonstrate proper error handling and security measures in your code.
+
+#### CREATED A DEMO APPLICATION 
+The application is under demo application
+
+#### DESCRIPTION
+The PHP application seamlessly connects to an MS SQL Server database, efficiently retrieving data from multiple tables such as employees, loans, salary_advances, and deductions through complex SQL queries employing JOIN operations and aggregate functions like SUM. The application meticulously calculates total salaries for each employee by skillfully combining data from disparate tables and performs the essential task of returning results as JSON, ensuring easy consumption by client-side applications. Demonstrating adept error handling, the application gracefully manages potential errors through try-catch blocks, promptly returning appropriate error messages and HTTP status codes when necessary, bolstering its reliability. Moreover, the application demonstrates a commitment to security by securely storing database credentials in a separate configuration file (config.php) and employing parameterized SQL queries, effectively mitigating risks of unauthorized access and SQL injection attacks. This comprehensive approach fulfills the requirements by seamlessly connecting, retrieving, processing, and securely handling data from an MS SQL Server database, ensuring robustness, efficiency, and security throughout its execution.
